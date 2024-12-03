@@ -1,118 +1,124 @@
+// Declaramos los pines
+const int botonPin = 7;    // Pin del botón
+const int ledPin1 = 12;     // Pin del LED (o salida)
 
+//CRK foto celda
+const int fotoceldaPin = A0;    // Pin de la fotocelda
+const int ledPin2 = 13;          // Pin del LED o salida
+const int umbral1 = 700;  
 
-#include <LiquidCrystal.h>
+//CRK humedad
+const int humedadPin = A1;      // Pin del sensor de humedad
+const int salidaPin1 = 8;        // Pin de salida
+const int umbral2 = 93;
 
-// Configuración del LCD 
-LiquidCrystal lcd(7, 8, 9, 10, 11, 12);
+//CRK TEMP
+const int tempPin = A2;        // Pin del sensor de temperatura
+const int salidaPin2 = 4;       // Pin de salida
 
-// Declaración de pines
-const int botonPin = 2;    // Pin del botón
-const int ledPin1 = 3;     // Pin del LED (o salida)
+const int umbral = 100;         // Umbral para activar la salida a temperaturas superiores a 30°C (aprox.)
 
-const int fotoceldaPin = A0;  // Pin de la fotocelda
-const int ledPin2 = 4;        // Pin del LED o salida
-const int umbral1 = 500;      // Umbral 
-
-const int humedadPin = A1;    // Pin del sensor de humedad
-const int ledPin3 = 5;        // Pin de salida
-const int umbral2 = 10;       // Umbral 
-
-const int tempPin = A2;       // Pin del sensor de temperatura
-const int ledPin4 = 6;        // Pin de salida
-const int umbral = 150;       // Umbral para activar la salida a temperaturas 
-
-const int pirPin = 10;        // Pin de entrada del PIR
-const int ledPin5 = 11;       // Pin de salida
+///CRK PIR
+const int pirPin = 2;          // Pin de entrada del PIR
+const int salidaPin = 3;       // Pin de salida
 
 // Variables para almacenar el estado
-bool estadoLed = LOW;          // Estado inicial del LED
-bool estadoBoton;              // Estado actual del botón
+bool estadoLed = LOW;      // Estado inicial del LED
+bool estadoBoton;          // Estado actual del botón
 bool ultimoEstadoBoton = LOW;  // Último estado del botón
 
 void setup() {
-  // Inicializa el LCD
-  lcd.begin(16, 2);
-  lcd.setCursor(0, 0);
-  lcd.print("Sistema Iniciado");
-  delay(2000); // Retardo para mostrar el mensaje inicial
-
-  // Configuración de pines
-  pinMode(botonPin, INPUT);
-  pinMode(ledPin1, OUTPUT);
-
-  pinMode(ledPin2, OUTPUT);
-  pinMode(ledPin3, OUTPUT);
-  pinMode(ledPin4, OUTPUT);
-  pinMode(pirPin, INPUT);
-  pinMode(ledPin5, OUTPUT);
-
-  Serial.begin(9600); // Inicia la comunicación serial para monitoreo
+  pinMode(botonPin, INPUT);     // Configuramos el pin del botón como entrada
+  pinMode(ledPin1, OUTPUT);      // Configuramos el pin del LED como salida
+  
+  //CRK luz
+   pinMode(ledPin2, OUTPUT);      // Configuramos el pin del LED como salida
+  Serial.begin(9000);           // Inicia la comunicación serial para monitoreo
+  
+  //CR Humedad
+  pinMode(salidaPin1, OUTPUT);   // Configuramos el pin de salida como salida
+  Serial.begin(90);
+  
+  //CRK Temperatura
+    pinMode(salidaPin2, OUTPUT);  // Configuramos el pin de salida como salida
+  Serial.begin(9000);          // Inicia la comunicación serial para monitoreo
+  
+  //CRK PIR
+   pinMode(pirPin, INPUT);      // Configuramos el pin del PIR como entrada
+  pinMode(salidaPin, OUTPUT);  // Configuramos el pin de salida como salida
+  Serial.begin(9600);          // Inicia la comunicación serial para monitoreo
+  
 }
 
 void loop() {
-  // Lógica para el botón
-  estadoBoton = digitalRead(botonPin); // Leemos el estado del botón
+  estadoBoton = digitalRead(botonPin);   // Leemos el estado del botón
+
+  // Verificamos si hubo un cambio de estado en el botón
   if (estadoBoton == HIGH && ultimoEstadoBoton == LOW) {
-    estadoLed = !estadoLed; // Cambiamos el estado del LED
-    digitalWrite(ledPin1, estadoLed); // Actualizamos el LED
-    delay(50); // Pequeño retardo para evitar rebotes
+    estadoLed = !estadoLed;             // Cambiamos el estado del LED
+    digitalWrite(ledPin1, estadoLed);    // Actualizamos el LED
+    delay(50);                          // Pequeño retardo para evitar rebotes
   }
-  ultimoEstadoBoton = estadoBoton; // Guardamos el estado actual del botón
 
-  // Lógica para la fotocelda
-  int lecturaFotocelda = analogRead(fotoceldaPin);
-  lcd.setCursor(0, 0); // Muestra en la primera fila
-  lcd.print("Luz: ");
-  lcd.print(lecturaFotocelda);
-  lcd.print("    "); // Borra datos sobrantes
-
-  if (lecturaFotocelda >= umbral1) {
-    digitalWrite(ledPin2, HIGH);
+  ultimoEstadoBoton = estadoBoton;      // Guardamos el estado actual del botón
+  
+  
+  /////CRK foto celda
+    int lectura = analogRead(fotoceldaPin);   // Leemos el valor de la fotocelda
+  Serial.println(lectura);                  // Imprimimos la lectura en el monitor serial
+  
+  // Comprobamos si la lectura está en el último 10%
+  if (lectura >= umbral1) {
+    digitalWrite(ledPin2, HIGH);             // Encendemos el LED
   } else {
-    digitalWrite(ledPin2, LOW);
+    digitalWrite(ledPin2, LOW);              // Apagamos el LED
   }
 
-  // Lógica para el sensor de humedad
-  int lecturaHumedad = analogRead(humedadPin);
-  lcd.setCursor(0, 1); // Muestra en la segunda fila
-  lcd.print("Hum: ");
-  lcd.print(lecturaHumedad);
-  lcd.print("    ");
-
-  if (lecturaHumedad <= umbral2) {
-    digitalWrite(ledPin3, HIGH);
+  delay(100); 
+  
+  ///////////////crk Humedad
+    int lecturaHumedad = analogRead(humedadPin);   // Leemos el valor del sensor de humedad
+  Serial.println(lecturaHumedad);                // Imprimimos la lectura en el monitor serial
+  
+  // Comprobamos si la lectura está en el último 10% (alta humedad)
+  if (lecturaHumedad >= umbral2) {
+    digitalWrite(salidaPin1, HIGH);               // Activamos la salida
   } else {
-    digitalWrite(ledPin3, LOW);
+    digitalWrite(salidaPin1, LOW);                // Apagamos la salida
   }
 
-  // Lógica para el sensor de temperatura
-  int lecturaTemp = analogRead(tempPin);
-  Serial.print("Temperatura: ");
-  Serial.println(lecturaTemp);
-
+  delay(100);  
+  
+  
+  ///////////////////CRK temperatura
+  
+   int lecturaTemp = analogRead(tempPin);   // Leemos el valor del sensor de temperatura
+  Serial.println(lecturaTemp);             // Imprimimos la lectura en el monitor serial
+  
+  // Comprobamos si la temperatura supera el umbral
   if (lecturaTemp >= umbral) {
-    digitalWrite(ledPin4, HIGH);
+    digitalWrite(salidaPin2, HIGH);         // Activamos la salida
   } else {
-    digitalWrite(ledPin4, LOW);
+    digitalWrite(salidaPin2, LOW);          // Apagamos la salida
   }
 
-  // Lógica para el sensor PIR
-  int estadoPIR = digitalRead(pirPin);
+  delay(100);                              // Pequeño retardo para evitar lecturas muy rápidas
+  
+  /////////////////
+   int estadoPIR = digitalRead(pirPin);  // Leemos el estado del PIR
+  
+  // Si el sensor detecta movimiento (estado HIGH)
   if (estadoPIR == HIGH) {
-    digitalWrite(ledPin5, HIGH);
+    digitalWrite(salidaPin, HIGH);      // Activamos la salida
     Serial.println("Movimiento detectado");
   } else {
-    digitalWrite(ledPin5, LOW);
+    digitalWrite(salidaPin, LOW);       // Apagamos la salida si no hay movimiento
     Serial.println("Sin movimiento");
   }
 
-  delay(100); // Pequeño retardo para estabilidad
+  delay(100);                           // Pequeño retardo para evitar lecturas muy rápidas
+  
+    
+  
+  
 }
-
-  
-  
-
-
-
-
-
